@@ -1,6 +1,7 @@
 import com.android.build.gradle.internal.lint.AndroidLintAnalysisTask
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
+import io.github.frankois944.spmForKmp.swiftPackageConfig
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -40,9 +41,20 @@ kotlin {
                 baseName = "common"
                 isStatic = true
             }
-            it.compilations {
-                val main by getting {
-                    cinterops.create("nativeBridge")
+            it.swiftPackageConfig(cinteropName = "nativeBridge") {
+                dependency {
+                    linkerOpts =
+                        listOf("-ObjC")
+                    remotePackageVersion(
+                        url = uri("https://github.com/google/GoogleSignIn-iOS.git"),
+                        products = {
+                            add("GoogleSignIn", exportToKotlin = true)
+                        },
+                        version = "9.0.0",
+                    )
+                    exportedPackageSettings {
+                        includeProduct = listOf("GoogleSignIn")
+                    }
                 }
             }
         }
@@ -77,23 +89,4 @@ tasks.withType<LintModelMetadataTask> {
 }
 tasks.withType<AndroidLintAnalysisTask> {
     dependsOn("generateResourceAccessorsForAndroidUnitTest")
-}
-
-swiftPackageConfig {
-    create("nativeBridge") {
-        dependency {
-            linkerOpts =
-                listOf("-ObjC")
-            remotePackageVersion(
-                url = uri("https://github.com/google/GoogleSignIn-iOS.git"),
-                products = {
-                    add("GoogleSignIn", exportToKotlin = true)
-                },
-                version = "9.0.0",
-            )
-            exportedPackageSettings {
-                includeProduct = listOf("GoogleSignIn")
-            }
-        }
-    }
 }
